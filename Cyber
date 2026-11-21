@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Strength Checker - B.Tech 1st Year</title>
+</head>
+<body>
+
+    <header>
+        <h1>Password Strength Checker</h1>
+        <p>B.Tech 1st Year Cybersecurity Mini-Project (Pure HTML)</p>
+    </header>
+
+    <hr>
+
+    <main>
+        <section>
+            <label for="passwordInput">Enter Password:</label><br>
+            <input type="password" id="passwordInput" placeholder="Type a password" oninput="checkPassword()">
+            <button type="button" id="toggleBtn" onclick="togglePassword()">Show</button>
+        </section>
+
+        <br>
+
+        <section>
+            <h2>Strength Result</h2>
+            <p><strong>Strength:</strong> <span id="strengthText">None</span></p>
+            <p><strong>Score:</strong> <span id="scoreText">0 / 5</span></p>
+            <label for="strengthMeter">Strength Meter:</label>
+            <meter id="strengthMeter" min="0" max="5" value="0"></meter>
+        </section>
+
+        <br>
+
+        <section>
+            <h2>Security Rules Checklist</h2>
+            <ul>
+                <li id="rule-length">[ ] At least 8 characters long</li>
+                <li id="rule-upper">[ ] Contains at least one uppercase letter (A-Z)</li>
+                <li id="rule-lower">[ ] Contains at least one lowercase letter (a-z)</li>
+                <li id="rule-number">[ ] Contains at least one digit (0-9)</li>
+                <li id="rule-special">[ ] Contains at least one special character (!@#$%^&amp;*)</li>
+            </ul>
+        </section>
+
+        <br>
+
+        <section>
+            <h2>Cybersecurity Metrics</h2>
+            <table border="1" cellpadding="6" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Character Pool Size (R)</td>
+                        <td id="poolText">0</td>
+                    </tr>
+                    <tr>
+                        <td>Password Entropy (E = L * log2(R))</td>
+                        <td id="entropyText">0 bits</td>
+                    </tr>
+                    <tr>
+                        <td>Estimated Brute-Force Crack Time (10B/sec)</td>
+                        <td id="crackTimeText">Instant</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <br>
+    <hr>
+
+    <footer>
+        <p>Client-side analysis only. No passwords are saved or sent over the network.</p>
+    </footer>
+
+    <script>
+        function togglePassword() {
+            const input = document.getElementById("passwordInput");
+            const btn = document.getElementById("toggleBtn");
+            if (input.type === "password") {
+                input.type = "text";
+                btn.textContent = "Hide";
+            } else {
+                input.type = "password";
+                btn.textContent = "Show";
+            }
+        }
+
+        function checkPassword() {
+            const pwd = document.getElementById("passwordInput").value;
+
+            const rules = {
+                length: pwd.length >= 8,
+                upper: /[A-Z]/.test(pwd),
+                lower: /[a-z]/.test(pwd),
+                number: /[0-9]/.test(pwd),
+                special: /[^A-Za-z0-9]/.test(pwd)
+            };
+
+            updateItem("rule-length", rules.length, "At least 8 characters long");
+            updateItem("rule-upper", rules.upper, "Contains at least one uppercase letter (A-Z)");
+            updateItem("rule-lower", rules.lower, "Contains at least one lowercase letter (a-z)");
+            updateItem("rule-number", rules.number, "Contains at least one digit (0-9)");
+            updateItem("rule-special", rules.special, "Contains at least one special character (!@#$%^&*)");
+
+            const score = Object.values(rules).filter(Boolean).length;
+            document.getElementById("scoreText").textContent = score + " / 5";
+            document.getElementById("strengthMeter").value = score;
+
+            const strengthEl = document.getElementById("strengthText");
+            if (pwd.length === 0) {
+                strengthEl.textContent = "None";
+            } else if (score <= 2) {
+                strengthEl.textContent = "Weak";
+            } else if (score <= 4) {
+                strengthEl.textContent = "Moderate";
+            } else {
+                strengthEl.textContent = "Strong";
+            }
+
+            let pool = 0;
+            if (rules.lower) pool += 26;
+            if (rules.upper) pool += 26;
+            if (rules.number) pool += 10;
+            if (rules.special) pool += 32;
+
+            document.getElementById("poolText").textContent = pool;
+
+            if (pwd.length === 0 || pool === 0) {
+                document.getElementById("entropyText").textContent = "0 bits";
+                document.getElementById("crackTimeText").textContent = "Instant";
+                return;
+            }
+
+            const entropy = Math.round(pwd.length * Math.log2(pool));
+            document.getElementById("entropyText").textContent = entropy + " bits";
+
+            const combinations = Math.pow(pool, pwd.length);
+            const seconds = combinations / 1e10;
+            document.getElementById("crackTimeText").textContent = formatDuration(seconds);
+        }
+
+        function updateItem(id, passed, label) {
+            const el = document.getElementById(id);
+            el.textContent = (passed ? "[x] " : "[ ] ") + label;
+        }
+
+        function formatDuration(sec) {
+            if (sec < 1) return "Instant (less than 1 second)";
+            if (sec < 60) return Math.round(sec) + " seconds";
+            if (sec < 3600) return Math.round(sec / 60) + " minutes";
+            if (sec < 86400) return Math.round(sec / 3600) + " hours";
+            if (sec < 31536000) return Math.round(sec / 86400) + " days";
+            const years = sec / 31536000;
+            if (years > 1e9) return "Billions of years";
+            if (years > 1e6) return Math.round(years / 1e6) + " million years";
+            return Math.round(years) + " years";
+        }
+    </script>
+</body>
+</html>
